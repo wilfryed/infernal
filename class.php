@@ -1,5 +1,46 @@
 <?php
 
+class Infernal {
+    
+    private $_content;
+    
+    public function __construct(){
+        
+    }
+    
+    public function getFooter(){
+        $return = '</body>'.PHP_EOL;
+        $return .= '</html>'.PHP_EOL;
+        $this->_content .= $return;
+    }
+    
+    public function getHeader(){
+        $return = '<html>'.PHP_EOL;
+        $return .= '<head>'.PHP_EOL;
+        $return .= '<title></title>'.PHP_EOL;
+        $return .= '<meta charset="UTF-8">'.PHP_EOL;
+        $return .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL;
+        $return .= '<link rel="stylesheet" href="style.css" />'.PHP_EOL;
+        $return .= '</head>'.PHP_EOL;
+        $return .= '<body>'.PHP_EOL;
+        $this->_content = $return;
+    }
+    
+    public function loadCss(){
+        
+    }
+    
+    public function loadJs($script){
+        $return = '<script src="'.$script.'"></script>'.PHP_EOL;
+        $this->_content .= $return;
+    }
+    
+    public function display(){
+        echo $this->_content;
+        $this->_content = '';
+    }
+}
+
 class Articles {
 
     private $path;
@@ -224,6 +265,19 @@ class Articles {
         );
 
         return $texte;
+    }
+    
+    public function getEntryTitle(){
+        $data = $this->getData();
+        $i=0;
+
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                $items[$i] = $this->itemLink($item).'#'.$this->sanitize($this->itemLink($item));
+                $i++;
+            }
+        }
+        return $items;
     }
 
 }

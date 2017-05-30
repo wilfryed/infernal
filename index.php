@@ -4,6 +4,11 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 require 'class.php';
+$infernal = new Infernal();
+
+$infernal->getHeader();
+$infernal->loadCss();
+$infernal->display();
 
 if (isset($_GET['entry'])) {
 
@@ -28,9 +33,31 @@ if (isset($_GET['entry'])) {
     echo $articles->displayIndex($_GET['index']);
 } else {
     $articles = new articles(true, "4");
+    
+    echo '<p>Search : </p>';
+    echo '<div id="the-basics">';
+    echo '<input class="typeahead" type="text">';
+    echo '</div>';
+    
+    
     echo $articles->menu();
     echo $articles->displayPage();
     echo $articles->pagination();
 }
 
+echo '<script>';
+echo "var entries = [";
+$items = $articles->getEntryTitle();
+foreach ($items as $item){
+    $item = explode('#',$item);
+    echo "{'slug': '".$item[1]."', 'value': '".$item[0]."' }, ";
+}
+echo "];";
+echo '</script>';
+
+$infernal->loadJs('assets/js/vendor/jquery.js');
+$infernal->loadJs('assets/js/vendor/typeahead.bundle.js');
+$infernal->loadJs('assets/js/app.js');
+$infernal->getFooter();
+$infernal->display();
 ?>
