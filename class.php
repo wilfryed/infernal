@@ -84,7 +84,7 @@ class Articles {
 
         foreach ($data as $parts) {
             foreach ($parts as $item) {
-                if (strtolower($this->itemLink($item)) == $title) {
+                if ($this->sanitize($this->itemLink($item)) == $title) {
                     $return .= '<p>' . $this->replace($item) . '</p>';
                 }
             }
@@ -111,7 +111,7 @@ class Articles {
 
         foreach ($items as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="entry/' . strtolower($this->itemLink($item)) . '">Lire la suite</a></p>';
+            $return .= '<p><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
         }
 
         return $return;
@@ -120,7 +120,7 @@ class Articles {
     public function displayIndex($index) {
         $data = $this->getData();
         $data = $data['contents/' . $index];
-        $return="";
+        $return = "";
 
         foreach ($data as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
@@ -160,6 +160,70 @@ class Articles {
         $return .= '</ul>';
 
         return $return;
+    }
+
+    public function get_preventry($entry) {
+        $data = $this->getData();
+        $return = '';
+        $i = 0;
+
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                $items[$i] = $this->sanitize($this->itemLink($item));
+                $i++;
+            }
+        }
+        $key = array_search($entry, $items);
+        if ($key > 0) {
+            $return .= '<p><a href="'.$items[$key - 1].'">précédent</a></p>';
+        } else {
+            $return .= '<p></p>';
+        }
+        return $return;
+    }
+
+    public function get_nextentry($entry) {
+        $data = $this->getData();
+        $return = '';
+        $i=0;
+
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                $items[$i] = $this->sanitize($this->itemLink($item));
+                $i++;
+            }
+        }
+        $maxItems = count($items);
+        $key = array_search($entry, $items);
+        if (($key + 1) < $maxItems) {
+            $return .= '<p><a href="'.$items[$key + 1].'">suivant</a></p>';
+        } else {
+            $return .= '<p></p>';
+        }
+        return $return;
+    }
+
+    private function sanitize($texte) {
+        $texte = mb_strtolower($texte, 'UTF-8');
+        $texte = str_replace(
+                array(
+            'à', 'â', 'ä', 'á', 'ã', 'å',
+            'î', 'ï', 'ì', 'í',
+            'ô', 'ö', 'ò', 'ó', 'õ', 'ø',
+            'ù', 'û', 'ü', 'ú',
+            'é', 'è', 'ê', 'ë',
+            'ç', 'ÿ', 'ñ',
+                ), array(
+            'a', 'a', 'a', 'a', 'a', 'a',
+            'i', 'i', 'i', 'i',
+            'o', 'o', 'o', 'o', 'o', 'o',
+            'u', 'u', 'u', 'u',
+            'e', 'e', 'e', 'e',
+            'c', 'y', 'n',
+                ), $texte
+        );
+
+        return $texte;
     }
 
 }

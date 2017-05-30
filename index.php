@@ -9,9 +9,11 @@ if (isset($_GET['entry'])) {
 
     $index = substr($_GET['entry'], 0, 1);
 
-    $articles = new articles($index . '.txt');
+    $articles = new articles();
 
     echo $articles->displayArticle($_GET['entry']);
+    echo $articles->get_preventry($_GET['entry']);
+    echo $articles->get_nextentry($_GET['entry']);
 } elseif (isset($_GET['page'])) {
 
     $articles = new articles(true, "4");
