@@ -1,39 +1,22 @@
 <?php
 
-class Infernal{
-
-    private $path;
-    protected $maxItems;
-
-    public function __construct($path = true, $maxItems = null) {
-        if ($path === true){
-            $this->path = "contents/*.txt";
-        }else{
-            $this->path = "contents/".$path;
-        }
-
-        $this->maxItems = $maxItems;
-    }
-
-}
-
-class Articles extend Infernal{
+class Articles {
 
     private $path;
     private $maxItems;
 
     public function __construct($path = true, $maxItems = null) {
-        if ($path === true){
+        if ($path === true) {
             $this->path = "contents/*.txt";
-        }else{
-            $this->path = "contents/".$path;
+        } else {
+            $this->path = "contents/" . $path;
         }
 
         $this->maxItems = $maxItems;
     }
 
-    private function getData(){
-        foreach (glob($this->path) as $filename){ 
+    private function getData() {
+        foreach (glob($this->path) as $filename) {
             $index = explode(".", $filename);
             $index = $index[0];
 
@@ -48,8 +31,8 @@ class Articles extend Infernal{
         return $data;
     }
 
-    private function getIndexes(){
-        foreach (glob($this->path) as $filename){ 
+    private function getIndexes() {
+        foreach (glob($this->path) as $filename) {
             $index = explode(".", basename($filename));
             $index = $index[0];
 
@@ -59,9 +42,9 @@ class Articles extend Infernal{
         return $indexes;
     }
 
-    private function countItems(){
+    private function countItems() {
         $i = 0;
-        foreach (glob($this->path) as $filename){ 
+        foreach (glob($this->path) as $filename) {
             $lines = file($filename);
             $lines = array_values(array_filter($lines, "trim"));
             foreach ($lines as $line) {
@@ -72,11 +55,11 @@ class Articles extend Infernal{
         return $i;
     }
 
-    private function replace($item, $clean = false){
-        if ($clean){
+    private function replace($item, $clean = false) {
+        if ($clean) {
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $item);
-        }else{
+        } else {
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $item);
         }
@@ -84,24 +67,24 @@ class Articles extend Infernal{
         return $return;
     }
 
-    private function itemLink($item){
+    private function itemLink($item) {
         $item = explode("{", $item);
         $item = explode("}", $item[1]);
 
         return $item[0];
     }
 
-    public function getContent(){
-        return $this -> content;
+    public function getContent() {
+        return $this->content;
     }
 
-    public function displayArticle($title){
+    public function displayArticle($title) {
         $data = $this->getData();
         $return = '';
 
-        foreach ($data as $parts){
-            foreach ($parts as $item){
-                if (strtolower($this->itemLink($item)) == $title){
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                if (strtolower($this->itemLink($item)) == $title) {
                     $return .= '<p>' . $this->replace($item) . '</p>';
                 }
             }
@@ -110,60 +93,75 @@ class Articles extend Infernal{
         return $return;
     }
 
-    public function displayPage($page = 1, $maxItems = null){
+    public function displayPage($page = 1, $maxItems = null) {
         $data = $this->getData();
         $return = '';
         $i = 0;
-        if ($maxItems == null){
+        if ($maxItems == null) {
             $maxItems = $this->maxItems;
         }
 
-        foreach ($data as $parts){
-            foreach ($parts as $item){
-                $items[] = $item; 
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                $items[] = $item;
             }
         }
 
-        $items = new LimitIterator(new ArrayIterator($items), ($page*$maxItems)-$maxItems, $maxItems*$page);
+        $items = new LimitIterator(new ArrayIterator($items), ($page * $maxItems) - $maxItems, $maxItems * $page);
 
-        foreach ($items as $item){
+        foreach ($items as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="entry/' .strtolower($this->itemLink($item)). '">Lire la suite</a></p>';
+            $return .= '<p><a href="entry/' . strtolower($this->itemLink($item)) . '">Lire la suite</a></p>';
         }
 
         return $return;
     }
 
-    public function pagination($maxItems = null){
-        if ($maxItems == null){
+    public function displayIndex($index) {
+        $data = $this->getData();
+        $data = $data['contents/' . $index];
+        $return="";
+
+        foreach ($data as $item) {
+            $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
+            $return .= '<p><a href="entry/' . strtolower($this->itemLink($item)) . '">Lire la suite</a></p>';
+        }
+
+        return $return;
+    }
+
+    public function pagination($maxItems = null) {
+        if ($maxItems == null) {
             $maxItems = $this->maxItems;
         }
 
         $items = $this->countItems();
-        if (($items % $maxItems) == 0){
+        if (($items % $maxItems) == 0) {
             $pages = $items / $maxItems;
-        }else{
-            $pages = $items % $maxItems;   
+        } else {
+            $pages = $items % $maxItems;
         }
         $return = '<ul>';
-        for ($i=0; $i<$pages; $i++) {
-            $return .= '<li><a href="https://'.$_SERVER['SERVER_NAME'] . dirname($_SERVER['REQUEST_URI']).'/' .($i + 1). '">' . ($i + 1) . '</a></li>';
+        for ($i = 0; $i < $pages; $i++) {
+            $return .= '<li><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/page/' . ($i + 1) . '">' . ($i + 1) . '</a></li>';
         }
         $return .= '</ul>';
 
         return $return;
     }
 
-    public function menu(){
+    public function menu() {
         $items = $this->getIndexes();
 
         $return = '<ul>';
-        foreach ($items as $item){
+        foreach ($items as $item) {
             $return .= '<li><a href="./' . $item . '.html">' . $item . '</a></li>';
         }
         $return .= '</ul>';
 
         return $return;
     }
+
 }
+
 ?>
