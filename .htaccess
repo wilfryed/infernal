@@ -1,0 +1,5 @@
+Options +FollowSymlinks
+RewriteEngine On 
+
+RewriteRule ^entry/(.+)$ index.php?entry=$1 [L]
+RewriteRule ^page/(.+)$ index.php?page=$1 [L]
