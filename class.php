@@ -115,9 +115,12 @@ class Articles {
         if ($clean) {
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $item);
-        } else {
+        } else {            
+            $markdown2 = array("{{", "}}");
+            $replace = array('<img src="http://wilfryed.com/app/infernal/contents/uploads/'.$this->sanitize($this->itemLink($item)).'_','.jpg" alt="">');
+            $return = str_replace($markdown2, $replace, $item);
             $markdown = array("{", "}");
-            $return = str_replace($markdown, "", $item);
+            $return = str_replace($markdown, "", $return);
         }
 
         return $return;
