@@ -1,0 +1,20 @@
+<div class="row">
+    <div class="small-12">
+        <p>Search : </p>
+        <div id="the-basics">
+            <input class="typeahead" type="text">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+<?php echo $articles->menu(); ?>
+</div>
+
+<div class="row">
+<?php echo $articles->getEntries(); ?>
+</div>
+
+<div class="row">
+<?php echo $articles->pagination(); ?>
+</div>
