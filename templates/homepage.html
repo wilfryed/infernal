@@ -1,26 +1,38 @@
+
+
+<div class="row">    
+    <div class="callout large primary">
+        <div class="row column text-center">
+            <h1>Our Blog</h1>
+            <h2 class="subheader">Such a Simple Blog Layout</h2>
+        </div>
+    </div>    
+</div>
+
 <div class="row">
-    <div class="small-12">
-        <p>Search : </p>
-        <div id="the-basics">
-            <input class="typeahead" type="text">
+    <div class="large-6 columns">
+        <h3>Les articles selon les lettres : </h3>
+        <?php echo $articles->menu(); ?>
+    </div>
+    <div class="large-6 columns">
+        <div class="small-12">
+            <h3>Faire une recherche :</h3>
+            <div id="the-basics">
+                <label>Search : </label><input class="typeahead" type="text">
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <?php echo $articles->menu(); ?>
-</div>
-
-<div class="row">
+<div class="row medium-8 large-7 columns">
+    <h3>Les articles de la page a : </h3>
     <?php echo $articles->getEntries(); ?>
 </div>
 
-<div class="row">
-    <?php echo $articles->pagination(); ?>
+<div class="row medium-12 large-2 columns">
+    <ul class="menu simple">
+        <li><a href="#"><?php echo $articles->pagination(); ?></a></li>
+    </ul>
 </div>
 
-<div class="row">
-    <?php 
-    echo $articles->randomEntry(); 
-    ?>
-</div>
+
