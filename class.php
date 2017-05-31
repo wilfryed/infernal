@@ -5,38 +5,39 @@ class Infernal {
     private $_content;
     private $_js;
 
-    public function __construct(){
+    public function __construct() {
         $_content = '';
         $_js = '';
     }
 
-    public function getFooter(){
+    public function getFooter() {
         $return = file_get_contents('templates/footer.html', FILE_USE_INCLUDE_PATH);
         $return = str_replace("%%%JS%%%", $this->_js, $return);
         $this->_content .= $return;
     }
 
-    public function getHeader(){
+    public function getHeader() {
         $this->_content = file_get_contents('templates/header.html', FILE_USE_INCLUDE_PATH);
     }
 
-    public function getTemplatePart($part, $articles){
-        include('templates/'.$part.'.html');
+    public function getTemplatePart($part, $articles) {
+        include('templates/' . $part . '.html');
     }
 
-    public function loadCss(){
-
+    public function loadCss() {
+        
     }
 
-    public function loadJs($script){
-        $return = '<script src="'.$script.'"></script>'.PHP_EOL;
+    public function loadJs($script) {
+        $return = '<script src="' . $script . '"></script>' . PHP_EOL;
         $this->_js .= $return;
     }
 
-    public function display(){
+    public function display() {
         echo $this->_content;
         $this->_content = '';
     }
+
 }
 
 class Articles {
@@ -89,22 +90,22 @@ class Articles {
 
     private function countItems() {
         $i = 0;
-        if ($this->currentIndex){
-            foreach (glob($this->path.'/'.$this->currentIndex.'.txt') as $filename) {
+        if ($this->currentIndex) {
+            foreach (glob($this->path . '/' . $this->currentIndex . '.txt') as $filename) {
                 $lines = file($filename);
                 $lines = array_values(array_filter($lines, "trim"));
                 foreach ($lines as $line) {
                     $i++;
                 }
             }
-        }else{
+        } else {
             foreach (glob($this->path) as $filename) {
                 $lines = file($filename);
                 $lines = array_values(array_filter($lines, "trim"));
                 foreach ($lines as $line) {
                     $i++;
                 }
-            } 
+            }
         }
 
         return $i;
@@ -172,7 +173,7 @@ class Articles {
     public function getEntry() {
         $data = $this->getData();
         $return = '';
-        if ($this->currentEntry){
+        if ($this->currentEntry) {
             foreach ($data as $parts) {
                 foreach ($parts as $item) {
                     if ($this->sanitize($this->itemLink($item)) == $this->currentEntry) {
@@ -185,6 +186,10 @@ class Articles {
         return $return;
     }
 
+    public function getIndex() {
+        
+    }
+
     public function getEntries($maxItems = null) {
         $data = $this->getData();
         $return = '';
@@ -192,9 +197,9 @@ class Articles {
         if ($maxItems == null) {
             $maxItems = $this->maxItems;
         }
-        if ($this->currentIndex){
+        if ($this->currentIndex) {
             $items = $data['contents/' . $this->currentIndex];
-        }else{
+        } else {
             foreach ($data as $parts) {
                 foreach ($parts as $item) {
                     $items[] = $item;
@@ -257,7 +262,7 @@ class Articles {
         }
         $key = array_search($entry, $items);
         if ($key > 0) {
-            $return .= '<p><a href="'.$items[$key - 1].'">précédent</a></p>';
+            $return .= '<p><a href="' . $items[$key - 1] . '">précédent</a></p>';
         } else {
             $return .= '<p></p>';
         }
@@ -267,7 +272,7 @@ class Articles {
     public function get_nextentry($entry) {
         $data = $this->getData();
         $return = '';
-        $i=0;
+        $i = 0;
 
         foreach ($data as $parts) {
             foreach ($parts as $item) {
@@ -278,7 +283,7 @@ class Articles {
         $maxItems = count($items);
         $key = array_search($entry, $items);
         if (($key + 1) < $maxItems) {
-            $return .= '<p><a href="'.$items[$key + 1].'">suivant</a></p>';
+            $return .= '<p><a href="' . $items[$key + 1] . '">suivant</a></p>';
         } else {
             $return .= '<p></p>';
         }
@@ -288,37 +293,59 @@ class Articles {
     private function sanitize($texte) {
         $texte = mb_strtolower($texte, 'UTF-8');
         $texte = str_replace(
-            array(
-                'à', 'â', 'ä', 'á', 'ã', 'å',
-                'î', 'ï', 'ì', 'í',
-                'ô', 'ö', 'ò', 'ó', 'õ', 'ø',
-                'ù', 'û', 'ü', 'ú',
-                'é', 'è', 'ê', 'ë',
-                'ç', 'ÿ', 'ñ',
-            ), array(
-                'a', 'a', 'a', 'a', 'a', 'a',
-                'i', 'i', 'i', 'i',
-                'o', 'o', 'o', 'o', 'o', 'o',
-                'u', 'u', 'u', 'u',
-                'e', 'e', 'e', 'e',
-                'c', 'y', 'n',
-            ), $texte
+                array(
+            'à', 'â', 'ä', 'á', 'ã', 'å',
+            'î', 'ï', 'ì', 'í',
+            'ô', 'ö', 'ò', 'ó', 'õ', 'ø',
+            'ù', 'û', 'ü', 'ú',
+            'é', 'è', 'ê', 'ë',
+            'ç', 'ÿ', 'ñ',
+                ), array(
+            'a', 'a', 'a', 'a', 'a', 'a',
+            'i', 'i', 'i', 'i',
+            'o', 'o', 'o', 'o', 'o', 'o',
+            'u', 'u', 'u', 'u',
+            'e', 'e', 'e', 'e',
+            'c', 'y', 'n',
+                ), $texte
         );
 
         return $texte;
     }
 
-    public function getEntryTitle(){
+    public function getEntryTitle() {
         $data = $this->getData();
-        $i=0;
+        $i = 0;
 
         foreach ($data as $parts) {
             foreach ($parts as $item) {
-                $items[$i] = $this->itemLink($item).'#'.$this->sanitize($this->itemLink($item));
+                $items[$i] = $this->itemLink($item) . '#' . $this->sanitize($this->itemLink($item));
                 $i++;
             }
         }
         return $items;
+    }
+
+    public function randomEntry() {
+        $data = $this->getData();
+        $i = 0;
+
+        foreach ($data as $parts) {
+            foreach ($parts as $item) {
+                if (isset($_SESSION['count']) && ($_SESSION['count'] != "")) {
+                    if ($_SESSION['count'] != $this->sanitize($this->itemLink($item))) {
+                        $items[$i] = $this->sanitize($this->itemLink($item));
+                    }
+                } else {
+                    $items[$i] = $this->sanitize($this->itemLink($item));
+                }
+                $i++;
+            }
+        }
+
+        $item = $items[rand(0, count($items) - 1)];
+        $_SESSION['random'] = $item;
+        return '<a href="entry/' . $item . '">random</a>';
     }
 
 }
