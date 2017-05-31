@@ -1,7 +1,6 @@
 <?php
 
 class Infernal {
-<<<<<<< HEAD
 
     private $_content;
     private $_js;
@@ -38,46 +37,6 @@ class Infernal {
         echo $this->_content;
         $this->_content = '';
     }
-=======
-    
-    private $_content;
-    
-    public function __construct(){
-        
-    }
-    
-    public function getFooter(){
-        $return = '</body>'.PHP_EOL;
-        $return .= '</html>'.PHP_EOL;
-        $this->_content .= $return;
-    }
-    
-    public function getHeader(){
-        $return = '<html>'.PHP_EOL;
-        $return .= '<head>'.PHP_EOL;
-        $return .= '<title></title>'.PHP_EOL;
-        $return .= '<meta charset="UTF-8">'.PHP_EOL;
-        $return .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL;
-        $return .= '<link rel="stylesheet" href="style.css" />'.PHP_EOL;
-        $return .= '</head>'.PHP_EOL;
-        $return .= '<body>'.PHP_EOL;
-        $this->_content = $return;
-    }
-    
-    public function loadCss(){
-        
-    }
-    
-    public function loadJs($script){
-        $return = '<script src="'.$script.'"></script>'.PHP_EOL;
-        $this->_content .= $return;
-    }
-    
-    public function display(){
-        echo $this->_content;
-        $this->_content = '';
-    }
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
 }
 
 class Articles {
@@ -130,7 +89,6 @@ class Articles {
 
     private function countItems() {
         $i = 0;
-<<<<<<< HEAD
         if ($this->currentIndex){
             foreach (glob($this->path.'/'.$this->currentIndex.'.txt') as $filename) {
                 $lines = file($filename);
@@ -138,13 +96,6 @@ class Articles {
                 foreach ($lines as $line) {
                     $i++;
                 }
-=======
-        foreach (glob($this->path) as $filename) {
-            $lines = file($filename);
-            $lines = array_values(array_filter($lines, "trim"));
-            foreach ($lines as $line) {
-                $i++;
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
             }
         }else{
             foreach (glob($this->path) as $filename) {
@@ -178,7 +129,6 @@ class Articles {
         return $item[0];
     }
 
-<<<<<<< HEAD
     public function setCurrentPage($page) {
         $this->currentPage = $page;
     }
@@ -191,17 +141,11 @@ class Articles {
         $this->currentEntry = $entry;
     }
 
-=======
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
     public function getContent() {
         return $this->content;
     }
 
-<<<<<<< HEAD
     public function displayPage($page = 1, $maxItems = null) {
-=======
-    public function displayArticle($title) {
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
         $data = $this->getData();
         $return = '';
         $i = 0;
@@ -222,7 +166,6 @@ class Articles {
             $return .= '<p><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
         }
 
-<<<<<<< HEAD
         return $return;
     }
 
@@ -235,12 +178,6 @@ class Articles {
                     if ($this->sanitize($this->itemLink($item)) == $this->currentEntry) {
                         $return .= '<p>' . $this->replace($item) . '</p>';
                     }
-=======
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                if ($this->sanitize($this->itemLink($item)) == $title) {
-                    $return .= '<p>' . $this->replace($item) . '</p>';
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
                 }
             }
         }
@@ -248,18 +185,13 @@ class Articles {
         return $return;
     }
 
-<<<<<<< HEAD
     public function getEntries($maxItems = null) {
-=======
-    public function displayPage($page = 1, $maxItems = null) {
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
         $data = $this->getData();
         $return = '';
         $i = 0;
         if ($maxItems == null) {
             $maxItems = $this->maxItems;
         }
-<<<<<<< HEAD
         if ($this->currentIndex){
             $items = $data['contents/' . $this->currentIndex];
         }else{
@@ -271,16 +203,6 @@ class Articles {
         }
 
         $items = new LimitIterator(new ArrayIterator($items), ($this->currentPage * $maxItems) - $maxItems, $maxItems * $this->currentPage);
-=======
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                $items[] = $item;
-            }
-        }
-
-        $items = new LimitIterator(new ArrayIterator($items), ($page * $maxItems) - $maxItems, $maxItems * $page);
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
 
         foreach ($items as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
@@ -290,22 +212,6 @@ class Articles {
         return $return;
     }
 
-<<<<<<< HEAD
-=======
-    public function displayIndex($index) {
-        $data = $this->getData();
-        $data = $data['contents/' . $index];
-        $return = "";
-
-        foreach ($data as $item) {
-            $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="entry/' . strtolower($this->itemLink($item)) . '">Lire la suite</a></p>';
-        }
-
-        return $return;
-    }
-
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
     public function pagination($maxItems = null) {
         if ($maxItems == null) {
             $maxItems = $this->maxItems;
@@ -382,7 +288,6 @@ class Articles {
     private function sanitize($texte) {
         $texte = mb_strtolower($texte, 'UTF-8');
         $texte = str_replace(
-<<<<<<< HEAD
             array(
                 'à', 'â', 'ä', 'á', 'ã', 'å',
                 'î', 'ï', 'ì', 'í',
@@ -398,32 +303,11 @@ class Articles {
                 'e', 'e', 'e', 'e',
                 'c', 'y', 'n',
             ), $texte
-=======
-                array(
-            'à', 'â', 'ä', 'á', 'ã', 'å',
-            'î', 'ï', 'ì', 'í',
-            'ô', 'ö', 'ò', 'ó', 'õ', 'ø',
-            'ù', 'û', 'ü', 'ú',
-            'é', 'è', 'ê', 'ë',
-            'ç', 'ÿ', 'ñ',
-                ), array(
-            'a', 'a', 'a', 'a', 'a', 'a',
-            'i', 'i', 'i', 'i',
-            'o', 'o', 'o', 'o', 'o', 'o',
-            'u', 'u', 'u', 'u',
-            'e', 'e', 'e', 'e',
-            'c', 'y', 'n',
-                ), $texte
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
         );
 
         return $texte;
     }
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> bd7ff7642dd0bcb64437354d475bada611a0078f
     public function getEntryTitle(){
         $data = $this->getData();
         $i=0;
