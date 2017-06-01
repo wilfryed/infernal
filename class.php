@@ -4,6 +4,7 @@ class Infernal {
 
     private $_content;
     private $_js;
+    private $param;
 
     public function __construct() {
         $_content = '';
@@ -36,6 +37,20 @@ class Infernal {
     public function display() {
         echo $this->_content;
         $this->_content = '';
+    }
+
+    public function getParam($param) {
+        $lines = file('config.ini');
+        $return = '';
+        foreach ($lines as $line) {
+            if (strpos($line, $param) !== false) {
+                $line = explode(':',$line);
+                $line = $line[1];
+                $return = str_replace('"', "", $line);
+                break;
+            }
+        }
+        echo $return;
     }
 
 }
@@ -113,11 +128,12 @@ class Articles {
 
     private function replace($item, $clean = false) {
         if ($clean) {
+            $return = preg_replace("/\{{[^}}]+\}}/","",$item);
             $markdown = array("{", "}");
-            $return = str_replace($markdown, "", $item);
-        } else {            
+            $return = str_replace($markdown, "", $return);
+        } else {
             $markdown2 = array("{{", "}}");
-            $replace = array('<img src="http://wilfryed.com/app/infernal/contents/uploads/'.$this->sanitize($this->itemLink($item)).'_','.jpg" alt="">');
+            $replace = array('<img src="http://wilfryed.com/app/infernal/contents/uploads/' . $this->sanitize($this->itemLink($item)) . '_', '.jpg" alt="">');
             $return = str_replace($markdown2, $replace, $item);
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $return);
@@ -187,10 +203,6 @@ class Articles {
         }
 
         return $return;
-    }
-
-    public function getIndex() {
-        
     }
 
     public function getEntries($maxItems = null) {
