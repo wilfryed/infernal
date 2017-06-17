@@ -1,0 +1,2 @@
+"Hello World!", "04/06/2017"
+This is the default welcome message! If you just install Infernal, go check {the documentation, https://github.com/wilfryed/infernal, _blank}!

@@ -1,61 +1,6 @@
 <?php
 
-class Infernal {
-
-    private $_content;
-    private $_js;
-    private $param;
-
-    public function __construct() {
-        $_content = '';
-        $_js = '';
-    }
-
-    public function getFooter() {
-        $return = file_get_contents('templates/footer.html', FILE_USE_INCLUDE_PATH);
-        $return = str_replace("%%%JS%%%", $this->_js, $return);
-        $this->_content .= $return;
-    }
-
-    public function getHeader() {
-        $this->_content = file_get_contents('templates/header.html', FILE_USE_INCLUDE_PATH);
-    }
-
-    public function getTemplatePart($part, $articles) {
-        include('templates/' . $part . '.html');
-    }
-
-    public function loadCss() {
-        
-    }
-
-    public function loadJs($script) {
-        $return = '<script src="' . $script . '"></script>' . PHP_EOL;
-        $this->_js .= $return;
-    }
-
-    public function display() {
-        echo $this->_content;
-        $this->_content = '';
-    }
-
-    public function getParam($param) {
-        $lines = file('config.ini');
-        $return = '';
-        foreach ($lines as $line) {
-            if (strpos($line, $param) !== false) {
-                $line = explode(':',$line);
-                $line = $line[1];
-                $return = str_replace('"', "", $line);
-                break;
-            }
-        }
-        echo $return;
-    }
-
-}
-
-class Articles {
+class Vault {
 
     private $path;
     private $maxItems;
@@ -164,7 +109,15 @@ class Articles {
     public function getContent() {
         return $this->content;
     }
-
+    
+    public function haveEntries(){
+        if ($this->countItems() > 0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    
     public function displayPage($page = 1, $maxItems = null) {
         $data = $this->getData();
         $return = '';

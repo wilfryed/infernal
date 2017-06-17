@@ -13,8 +13,14 @@
                 <ul class="menu">
                     <li><a href="http://wilfryed.com/app/infernal/">Accueil</a></li>
                     <!--<li><a href="#"><?php echo $articles->randomEntry();?></a></li>-->
+
                 </ul>
             </div>
+            <div class="top-bar-right">
+                <div id="the-basics">
+                <input class="typeahead" type="text" placeholder="search">
+                </div>
+            </div>
         </div>
-        
+
 
