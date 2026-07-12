@@ -10,6 +10,14 @@ Infernal is a lightweight, file-based PHP content management system for publishi
 - Basic search/autocomplete support via the frontend script
 - No database required
 
+## Recent changes
+
+The project has been reorganized around a lightweight class-based bootstrap:
+
+- An `autoload.php` file now initializes the application and loads the core classes automatically.
+- The main logic is split into dedicated classes under `classes/` for configuration, content handling, rendering, and access control.
+- The entry point and theme rendering flow have been simplified for easier maintenance.
+
 ## Requirements
 
 - PHP 7+ recommended
@@ -73,13 +81,16 @@ The project uses URL rewriting rules defined in `.htaccess`:
 ```text
 .
 ├── assets/            # Frontend assets
+├── classes/           # Core PHP classes
+│   ├── Codex.php      # INI configuration loader
+│   ├── Gatekeeper.php # Access-control helper
+│   ├── Infernal.php   # Main rendering workflow
+│   └── Vault.php      # Content loading and rendering logic
 ├── contents/          # Text content files
 ├── themes/            # Theme templates
-├── class.infernal.php # Main rendering class
-├── class.vault.php    # Content loading and rendering logic
+├── autoload.php       # Application bootstrap and autoloader
 ├── config.ini         # Site configuration
 ├── index.php          # Entry point
-├── invoker.php        # Helper functions for templates
 ├── .htaccess          # URL rewriting rules
 └── purgatory.html     # Fallback/error page template
 ```
