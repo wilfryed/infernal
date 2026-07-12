@@ -1,73 +1,89 @@
 <?php
 session_start();
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+require 'autoload.php';
 
-spl_autoload_register(function ($class_name) {
-    require_once __DIR__ . '/class.' . strtolower($class_name) . '.php';
-});
+$codex = new Codex();
+$infernal = new Infernal($codex);
 
-$infernal = new Infernal();
 define('BASE_URL', $infernal->getParam('base_url'));
 
-if ($infernal->loadTheme()){
-    
-    $infernal->getHeader();
-    $infernal->loadCss();
-    $infernal->display();
+if (!$infernal->loadTheme()) {
+    echo 'Theme not found.';
+    $infernal->purgatory();
+    exit;
+}
 
-    if (isset($_GET['entry'])) {
-        //entry
-        $index = substr($_GET['entry'], 0, 1);
+$gatekeeper = new Gatekeeper();
+$route = $gatekeeper->getRoute();
+
+$infernal->getHeader();
+$infernal->loadCss();
+
+switch ($route['name']) {
+    case 'entry':
 
         $articles = new Vault();
-        $articles->setCurrentEntry($_GET['entry']);
-        $infernal->getTemplatePart('entry', $articles);
 
-    } elseif (isset($_GET['page'])) {
-        // page
-        $articles = new Vault(true, "4");
-        include('invoker.php');
-        $articles->setCurrentPage($_GET['page']);
-        $infernal->getTemplatePart('homepage', $articles);
+        $articles->setCurrentEntry($route['value']);
 
-    } elseif ((isset($_GET['index']))) {    
-        //index
-        $articles = new Vault(true, "4");
-        include('invoker.php');
+        $infernal->getTemplatePart(
+            'entry',
+            $articles
+        );
+
+        break;
+
+    case 'page':
+
+        $articles = new Vault(true, 4);
+
+        $articles->setCurrentPage($route['value']);
+
+        $infernal->getTemplatePart(
+            'homepage',
+            $articles
+        );
+
+        break;
+
+    case 'index':
+
+        $articles = new Vault(true, 4);
+
         $articles->setCurrentPage(1);
-        $articles->setCurrentIndex($_GET['index']);
-        $infernal->getTemplatePart('homepage', $articles);
+        $articles->setCurrentIndex($route['value']);
 
-    } else {
-        //homepage
-        $articles = new Vault(true, "4");
-        include('invoker.php');
-        $infernal->getTemplatePart('homepage', $articles);
-        $infernal->display();
-    }
+        $infernal->getTemplatePart(
+            'homepage',
+            $articles
+        );
 
-    echo '<script>';
-    echo "var entries = [";
-    $items = $articles->getEntryTitle();
-    foreach ($items as $item){
-        $item = explode('#',$item);
-        echo "{'slug': '".$item[1]."', 'value': '".$item[0]."' }, ";
-    }
-    echo "];";
-    echo '</script>';
+        break;
 
-    $infernal->loadJs('./assets/js/app.js');
-    $infernal->getFooter();
-    $infernal->display();
+    default:
 
-}else{
-    if (isset($_GET['404'])){
-        $infernal->purgatory("404");
-    }else{
-        $infernal->purgatory();
-    }    
+        $articles = new Vault(true, 4);
+
+        $infernal->getTemplatePart(
+            'homepage',
+            $articles
+        );
+
+        break;
+
 }
-?>
+
+echo '<script>';
+echo "var entries = [";
+$items = $articles->getEntryTitle();
+foreach ($items as $item) {
+    $item = explode('#', $item);
+    echo "{'slug': '" . $item[1] . "', 'value': '" . $item[0] . "' }, ";
+}
+echo "];";
+echo '</script>';
+
+$infernal->getFooter();
+
+$infernal->display();

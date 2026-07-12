@@ -8,13 +8,15 @@
 class Infernal
 {
 
+    private $codex;
     private $_content;
     private $_js;
     private $_theme;
     private $param;
 
-    public function __construct()
+    public function __construct($codex)
     {
+        $this->codex = $codex;
         $this->_content = '';
         $this->_js = '';
     }
@@ -52,9 +54,7 @@ class Infernal
 
     public function getParam(string $param)
     {
-        $config = parse_ini_file('config.ini');
-
-        return $config[$param] ?? "";
+        return $this->codex->get($param);
     }
 
     public function loadTheme()

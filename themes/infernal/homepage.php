@@ -15,8 +15,8 @@
 
 <div class="row medium-8 large-7 columns">
     <?php
-    if (have_entries()){
-        the_entries();
+    if ($articles->haveEntries()){
+        echo $articles->getEntries();
     }else{
         echo "No entries for the moment!";
     }

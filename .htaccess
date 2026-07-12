@@ -1,6 +1,9 @@
-Options +FollowSymlinks
-RewriteEngine On 
+RewriteEngine On
 
-RewriteRule ^entry/(.+)$ index.php?entry=$1 [L]
-RewriteRule ^page/(.+)$ index.php?page=$1 [L]
-RewriteRule ^(.+).html$ index.php?index=$1 [L]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^entry/([^/]+)/?$ index.php?entry=$1 [QSA,L]
+RewriteRule ^page/([0-9]+)/?$ index.php?page=$1 [QSA,L]
+RewriteRule ^([^/]+)\.html$ index.php?index=$1 [QSA,L]
