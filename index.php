@@ -1,24 +1,25 @@
 <?php
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-ini_set("display_errors", 1);
 
-function __autoload($class_name) {
-    include 'class.' . strtolower($class_name) . '.php';
-}
+spl_autoload_register(function ($class_name) {
+    require_once __DIR__ . '/class.' . strtolower($class_name) . '.php';
+});
 
 $infernal = new Infernal();
+define('BASE_URL', $infernal->getParam('base_url'));
 
 if ($infernal->loadTheme()){
-
+    
     $infernal->getHeader();
     $infernal->loadCss();
     $infernal->display();
 
     if (isset($_GET['entry'])) {
         //entry
-
         $index = substr($_GET['entry'], 0, 1);
 
         $articles = new Vault();
@@ -27,25 +28,25 @@ if ($infernal->loadTheme()){
 
     } elseif (isset($_GET['page'])) {
         // page
-
         $articles = new Vault(true, "4");
+        include('invoker.php');
         $articles->setCurrentPage($_GET['page']);
         $infernal->getTemplatePart('homepage', $articles);
 
     } elseif ((isset($_GET['index']))) {    
         //index
         $articles = new Vault(true, "4");
+        include('invoker.php');
         $articles->setCurrentPage(1);
         $articles->setCurrentIndex($_GET['index']);
         $infernal->getTemplatePart('homepage', $articles);
 
     } else {
         //homepage
-
         $articles = new Vault(true, "4");
         include('invoker.php');
         $infernal->getTemplatePart('homepage', $articles);
-
+        $infernal->display();
     }
 
     echo '<script>';
@@ -58,8 +59,7 @@ if ($infernal->loadTheme()){
     echo "];";
     echo '</script>';
 
-    $infernal->loadJs('http://wilfryed.com/app/infernal/assets/js/vendor/typeahead.bundle.js');
-    $infernal->loadJs('http://wilfryed.com/app/infernal/assets/js/app.js');
+    $infernal->loadJs('./assets/js/app.js');
     $infernal->getFooter();
     $infernal->display();
 
@@ -70,6 +70,4 @@ if ($infernal->loadTheme()){
         $infernal->purgatory();
     }    
 }
-
-
 ?>

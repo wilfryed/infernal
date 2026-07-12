@@ -1,9 +1,13 @@
 <?php
 
+/**
+ * Vault content handler for loading, listing, and rendering text entries.
+ */
 class Vault {
 
     private $path;
     private $maxItems;
+    private $content;
     private $currentPage;
     private $currentIndex;
     private $currentEntry;
@@ -22,6 +26,8 @@ class Vault {
     }
 
     private function getData() {
+        $data = array();
+
         foreach (glob($this->path) as $filename) {
             $index = explode(".", $filename);
             $index = $index[0];
@@ -38,6 +44,8 @@ class Vault {
     }
 
     private function getIndexes() {
+        $indexes = array();
+
         foreach (glob($this->path) as $filename) {
             $index = explode(".", basename($filename));
             $index = $index[0];
@@ -71,14 +79,14 @@ class Vault {
         return $i;
     }
 
-    private function replace($item, $clean = false) {
+    private function replace(string $item, bool $clean = false): string {
         if ($clean) {
             $return = preg_replace("/\{{[^}}]+\}}/","",$item);
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $return);
         } else {
             $markdown2 = array("{{", "}}");
-            $replace = array('<img src="http://wilfryed.com/app/infernal/contents/uploads/' . $this->sanitize($this->itemLink($item)) . '_', '.jpg" alt="">');
+            $replace = array('<img src="/contents/uploads/' . $this->sanitize($this->itemLink($item)) . '_', '.jpg" alt="">');
             $return = str_replace($markdown2, $replace, $item);
             $markdown = array("{", "}");
             $return = str_replace($markdown, "", $return);
@@ -87,22 +95,22 @@ class Vault {
         return $return;
     }
 
-    private function itemLink($item) {
-        $item = explode("{", $item);
-        $item = explode("}", $item[1]);
+    private function itemLink(string $item): string {
+        $item = explode("{", $item ?? '');
+        $item = explode("}", $item[1] ?? '');
 
         return $item[0];
     }
 
-    public function setCurrentPage($page) {
+    public function setCurrentPage(int $page) {
         $this->currentPage = $page;
     }
 
-    public function setCurrentIndex($index) {
+    public function setCurrentIndex(string $index) {
         $this->currentIndex = $index;
     }
 
-    public function setCurrentEntry($entry) {
+    public function setCurrentEntry(string $entry) {
         $this->currentEntry = $entry;
     }
 
@@ -119,6 +127,7 @@ class Vault {
     }
     
     public function displayPage($page = 1, $maxItems = null) {
+        $items = array();
         $data = $this->getData();
         $return = '';
         $i = 0;
@@ -136,7 +145,7 @@ class Vault {
 
         foreach ($items as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
+            $return .= '<p><a href="http://' . BASE_URL . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
         }
 
         return $return;
@@ -159,6 +168,7 @@ class Vault {
     }
 
     public function getEntries($maxItems = null) {
+        $items = array();
         $data = $this->getData();
         $return = '';
         $i = 0;
@@ -179,7 +189,7 @@ class Vault {
 
         foreach ($items as $item) {
             $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
+            $return .= '<p><a href="' . BASE_URL . '/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
         }
 
         return $return;
@@ -198,7 +208,7 @@ class Vault {
         }
         $return = '<ul>';
         for ($i = 0; $i < $pages; $i++) {
-            $return .= '<li><a href="http://' . $_SERVER['SERVER_NAME'] . '/app/infernal/page/' . ($i + 1) . '">' . ($i + 1) . '</a></li>';
+            $return .= '<li><a href="' . BASE_URL . '/page/' . ($i + 1) . '">' . ($i + 1) . '</a></li>';
         }
         $return .= '</ul>';
 
@@ -217,7 +227,8 @@ class Vault {
         return $return;
     }
 
-    public function get_preventry($entry) {
+    public function get_preventry(string $entry) {
+        $items = array();
         $data = $this->getData();
         $return = '';
         $i = 0;
@@ -237,7 +248,8 @@ class Vault {
         return $return;
     }
 
-    public function get_nextentry($entry) {
+    public function get_nextentry(string $entry) {
+        $items = array();
         $data = $this->getData();
         $return = '';
         $i = 0;
@@ -258,7 +270,7 @@ class Vault {
         return $return;
     }
 
-    private function sanitize($texte) {
+    private function sanitize(string $texte): string {
         $texte = mb_strtolower($texte, 'UTF-8');
         $texte = str_replace(
                 array(
@@ -282,6 +294,7 @@ class Vault {
     }
 
     public function getEntryTitle() {
+        $items = array();
         $data = $this->getData();
         $i = 0;
 
@@ -295,6 +308,7 @@ class Vault {
     }
 
     public function randomEntry() {
+        $items = array();
         $data = $this->getData();
         $i = 0;
 
