@@ -31,11 +31,6 @@ The project has been reorganized around a lightweight class-based bootstrap:
 3. Update the configuration in `config.ini` if needed.
 4. Open the site in your browser.
 
-Example local setup with Laragon:
-
-- Place the project in a folder such as `C:\laragon\www\infernal`
-- Open `http://infernal/` or the matching local URL for your setup
-
 ## Configuration
 
 The main configuration file is `config.ini`.
