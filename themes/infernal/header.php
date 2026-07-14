@@ -12,7 +12,7 @@
     <div class="top-bar">
         <div class="top-bar-left">
             <ul class="menu">
-                <li><a href="<?= BASE_URL ?>/">Accueil</a></li>
+                <li><a href="<?= $inferno->getParam('base_url') ?>/">Accueil</a></li>
             </ul>
         </div>
         <div class="top-bar-right">
