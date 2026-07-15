@@ -4,7 +4,8 @@ session_start();
 require 'autoload.php';
 
 $codex = new Codex();
-$inferno = new Inferno($codex);
+$markdown = new Markdown();
+$inferno = new Inferno($codex, $markdown);
 $invoker = new Invoker($inferno);
 $gatekeeper = new Gatekeeper();
 $route = $gatekeeper->getRoute();

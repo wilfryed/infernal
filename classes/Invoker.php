@@ -31,7 +31,7 @@ class Invoker
     public function getMain(array $route)
     {
         $articles = $this->inferno->loadArticles($route);
-
+        var_dump($route);
         switch ($route['name']) {
             case 'entry':
 

@@ -13,10 +13,12 @@ class Inferno
     private $_js;
     private $_theme;
     private $param;
+    private $markdown;
 
-    public function __construct($codex)
+    public function __construct($codex, $markdown)
     {
         $this->codex = $codex;
+        $this->markdown = $markdown;
         $this->_content = '';
         $this->_js = '';
     }
@@ -67,7 +69,7 @@ class Inferno
         switch ($route['name']) {
             case 'entry':
 
-                $articles = new Vault();
+                $articles = new Vault($this->markdown);
 
                 $articles->setCurrentEntry($route['value']);
 
@@ -76,7 +78,7 @@ class Inferno
 
             case 'page':
 
-                $articles = new Vault(true, 4);
+                $articles = new Vault($this->markdown, true, 4);
 
                 $articles->setCurrentPage($route['value']);
                 return $articles;
@@ -84,7 +86,7 @@ class Inferno
 
             case 'index':
 
-                $articles = new Vault(true, 4);
+                $articles = new Vault($this->markdown, true, 4);
 
                 $articles->setCurrentPage(1);
                 $articles->setCurrentIndex($route['value']);
@@ -93,7 +95,7 @@ class Inferno
 
             default:
 
-                $articles = new Vault(true, 4);
+                $articles = new Vault($this->markdown, true, 4);
                 return $articles;
                 break;
         }

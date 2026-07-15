@@ -1,35 +1,46 @@
 # Infernal
 
-Infernal is a lightweight, file-based PHP content management system for publishing simple text entries as a small website or blog. It requires no database and is designed to be easy to deploy on a standard Apache/PHP environment.
+Infernal is a zero-database, zero-build, zero-dependency CMS.
+A lightweight, file-based PHP content management system for publishing simple text and markdown entries as a small website or blog.
+
+Write your content in Markdown.
+Upload it via FTP.
+Publish instantly.
 
 ## Features
 
-- Flat-file content storage using plain `.txt` files
-- Simple routing for homepage, entry pages, and paginated pages
+- Flat-file content storage using `.txt` and `.md` files
+- URL-based routing for homepage, entry, page, and index-based views
 - Theme-based rendering through the `themes/` directory
-- Basic search/autocomplete support via the frontend script
-- No database required
+- Markdown parsing for headings, emphasis, links, images, code, quotes, and paragraphs
+- Built-in fallback/error rendering
+- No database or build step required
 
 ## Recent changes
 
-The project has been reorganized around a lightweight class-based bootstrap:
+The project now runs through a lightweight class-based bootstrap:
 
-- An `autoload.php` file now initializes the application and loads the core classes automatically.
-- The main logic is split into dedicated classes under `classes/` for configuration, content handling, rendering, and access control.
-- The entry point and theme rendering flow have been simplified for easier maintenance.
+- `autoload.php` registers the autoloader and loads the core classes automatically.
+- `index.php` initializes the session, resolves the current route, loads the active theme, and renders the page.
+- `classes/Invoker.php` coordinates the header, main content, and footer rendering flow.
+- `classes/Markdown.php` converts content files into HTML fragments.
+- `classes/Vault.php` loads, paginates, and renders file-based entries.
+- `classes/Gatekeeper.php` resolves the current route from the request.
 
 ## Requirements
 
 - PHP 7+ recommended
 - Apache with `mod_rewrite` enabled
 - A web server root pointing to this project directory
+- Read/write access to `contents/` and `themes/` if you plan to add content or customize templates
 
 ## Installation
 
-1. Clone or copy this project into your web server document root.
-2. Make sure the project folder is accessible by your web server.
-3. Update the configuration in `config.ini` if needed.
-4. Open the site in your browser.
+1. Copy or clone this project into your web server document root.
+2. Make sure Apache is allowed to serve the folder and that `.htaccess` rewrites are enabled.
+3. Update the settings in `config.ini` if needed.
+4. Add content files under `contents/` using `.txt` or `.md`.
+5. Open the site in your browser.
 
 ## Configuration
 
@@ -53,23 +64,18 @@ base_url = /infernal
 
 ## Content format
 
-Content entries are stored in the `contents/` directory as `.txt` files.
+Content entries are stored in the `contents/` directory as `.txt` or `.md` files.
 
-Each entry can contain one or more paragraphs. The current parser uses the content as plain text and extracts titles/links from markup patterns such as:
-
-```text
-{Abaddon}, le destructeur; chef des démons de la septième hiérarchie.
-```
-
-You can add new content files and the system will include them automatically when the site is rendered.
+Each file can contain multiple paragraphs and supports a simple Markdown syntax. The parser currently handles headings, emphasis, links, images, inline code, blockquotes, horizontal rules, and paragraph formatting. New files are picked up automatically when the site is rendered.
 
 ## Routing
 
 The project uses URL rewriting rules defined in `.htaccess`:
 
 - `/entry/<slug>` displays a single entry
-- `/page/<number>` displays a paginated page
-- `/<page>.html` displays a page based on the index name
+- `/page/<number>` displays a paginated list of entries
+- `/<index>.html` routes to an index-based view using the matching content index
+- The default homepage is rendered when no route is provided
 
 ## Project structure
 
@@ -78,14 +84,16 @@ The project uses URL rewriting rules defined in `.htaccess`:
 ├── assets/            # Frontend assets
 ├── classes/           # Core PHP classes
 │   ├── Codex.php      # INI configuration loader
-│   ├── Gatekeeper.php # Access-control helper
-│   ├── Infernal.php   # Main rendering workflow
-│   └── Vault.php      # Content loading and rendering logic
-├── contents/          # Text content files
+│   ├── Gatekeeper.php # Route resolution
+│   ├── Inferno.php    # Theme and rendering helpers
+│   ├── Invoker.php    # Rendering orchestration
+│   ├── Markdown.php   # Markdown-to-HTML parser
+│   └── Vault.php      # Content loading and pagination
+├── contents/          # Content entries (.txt/.md)
 ├── themes/            # Theme templates
 ├── autoload.php       # Application bootstrap and autoloader
 ├── config.ini         # Site configuration
-├── index.php          # Entry point
+├── index.php          # Application entry point
 ├── .htaccess          # URL rewriting rules
 └── purgatory.html     # Fallback/error page template
 ```

@@ -7,12 +7,6 @@
     </div>    
 </div>
 
-<div class="row">
-    <div class="small-12">
-        <?php echo $articles->menu(); ?>
-    </div>
-</div>
-
 <div class="row medium-8 large-7 columns">
     <?php
     if ($articles->haveEntries()){
