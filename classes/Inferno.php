@@ -86,7 +86,7 @@ class Inferno
 
             case 'index':
 
-                $articles = new Vault($this->markdown, true, 4);
+                $articles = new Vault($this->markdown, true, 25);
 
                 $articles->setCurrentPage(1);
                 $articles->setCurrentIndex($route['value']);
@@ -95,7 +95,7 @@ class Inferno
 
             default:
 
-                $articles = new Vault($this->markdown, true, 4);
+                $articles = new Vault($this->markdown, true, 25);
                 return $articles;
                 break;
         }
@@ -108,5 +108,10 @@ class Inferno
         ob_start();
         include 'themes/' . $this->_theme . '/' . $template . '.php';
         return ob_get_clean();
+    }
+
+    public function getThemeUrl(): string
+    {
+        return BASE_URL . '/themes/' . $this->getParam('theme');
     }
 }

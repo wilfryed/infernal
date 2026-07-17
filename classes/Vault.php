@@ -1,224 +1,186 @@
 <?php
 
 /**
- * Vault content handler for loading, listing, and rendering text entries.
+ * Vault content handler.
+ *
+ * Loads content files and transforms them into Entry objects.
  */
 class Vault
 {
+    private string $path;
+    private int $maxItems;
+    private int $currentPage;
+    private string|false $currentEntry;
+    private Markdown $markdown;
 
-    private $path;
-    private $maxItems;
-    private $content;
-    private $currentPage;
-    private $currentIndex;
-    private $currentEntry;
-    private $markdown;
 
-    public function __construct($markdown,$path = true, $maxItems = null)
+    public function __construct(Markdown $markdown, $path = true, $maxItems = 10)
     {
-
         $this->markdown = $markdown;
-        
-        if ($path === true) {
-            $this->path = "contents";
-        } else {
-            $this->path = "contents/" . $path;
-        }
+
+        $this->path = $path === true
+            ? "contents"
+            : "contents/" . $path;
 
         $this->maxItems = $maxItems;
         $this->currentPage = 1;
-        $this->currentIndex = false;
         $this->currentEntry = false;
     }
 
-    private function getData()
+
+    /**
+     * Return all entries.
+     */
+    private function getData(): array
     {
-        $data = [];
+        $entries = [];
 
         foreach ($this->getFiles() as $filename) {
 
-            $data[] = [
-                'slug' => pathinfo($filename, PATHINFO_FILENAME),
-                'content' => file_get_contents($filename),
-                'file' => $filename
-            ];
+            $entries[] = $this->createEntry($filename);
         }
+
+        return $entries;
+    }
+
+
+    /**
+     * Create an Entry object from a file.
+     */
+    private function createEntry(string $filename): Entry
+    {
+        $content = file_get_contents($filename);
+
+        $data = $this->parseMarkdownFile($content);
+
+        $data['file'] = $filename;
+
+        return new Entry($data, $this->markdown);
+    }
+
+    private function parseMarkdownFile(string $content): array
+    {
+        $data = [
+            'title' => '',
+            'slug' => '',
+            'date' => '',
+            'categories' => [],
+            'tags' => [],
+            'content' => ''
+        ];
+
+        if (!preg_match('/^---(.*?)---(.*)$/s', $content, $matches)) {
+            $data['content'] = $content;
+            return $data;
+        }
+
+
+        $metadata = trim($matches[1]);
+        $data['content'] = trim($matches[2]);
+
+
+        foreach (explode("\n", $metadata) as $line) {
+
+            if (!str_contains($line, ':')) {
+                continue;
+            }
+
+
+            [$key, $value] = explode(':', $line, 2);
+
+            $key = trim($key);
+            $value = trim($value);
+
+
+            // Tableau simple : ["a", "b"]
+            if (
+                str_starts_with($value, '[') &&
+                str_ends_with($value, ']')
+            ) {
+
+                $value = trim($value, '[]');
+
+                if ($value === '') {
+                    $value = [];
+                } else {
+
+                    $value = array_map(
+                        function ($item) {
+                            return trim($item, " \"'");
+                        },
+                        explode(',', $value)
+                    );
+                }
+            } else {
+
+                // Valeur texte
+                $value = trim($value, "\"'");
+            }
+
+
+            $data[$key] = $value;
+        }
+
 
         return $data;
     }
 
-    private function getFiles()
+    /**
+     * Find markdown and text files.
+     */
+    private function getFiles(): array
     {
-        $files = [];
-
-        $files = array_merge(
-            $files,
+        return array_merge(
+            glob($this->path . '/*.md') ?: [],
             glob($this->path . '/*.txt') ?: []
         );
-
-        $files = array_merge(
-            $files,
-            glob($this->path . '/*.md') ?: []
-        );
-
-        return $files;
     }
 
-    private function getExtension($file)
-    {
-        return pathinfo($file, PATHINFO_EXTENSION);
-    }
 
-    private function getIndexes()
-    {
-        $indexes = array();
-
-        foreach (glob($this->path) as $filename) {
-            $index = explode(".", basename($filename));
-            $index = $index[0];
-
-            $indexes[] = $index;
-        }
-
-        return $indexes;
-    }
-
-    private function countItems()
-    {
-        $i = 0;
-        if ($this->currentIndex) {
-            foreach (glob($this->path . '/' . $this->currentIndex . '.txt') as $filename) {
-                $lines = file($filename);
-                $lines = array_values(array_filter($lines, "trim"));
-                foreach ($lines as $line) {
-                    $i++;
-                }
-            }
-        } else {
-            foreach ($this->getFiles() as $filename) {
-                $lines = file($filename);
-                $lines = array_values(array_filter($lines, "trim"));
-                foreach ($lines as $line) {
-                    $i++;
-                }
-            }
-        }
-
-        return $i;
-    }
-
-    private function replace(string $item, bool $clean = false): string
-    {
-        if ($clean) {
-            $return = preg_replace("/\{{[^}}]+\}}/", "", $item);
-            $markdown = array("{", "}");
-            $return = str_replace($markdown, "", $return);
-        } else {
-            $markdown2 = array("{{", "}}");
-            $replace = array('<img src="/contents/uploads/' . $this->sanitize($this->itemLink($item)) . '_', '.jpg" alt="">');
-            $return = str_replace($markdown2, $replace, $item);
-            $markdown = array("{", "}");
-            $return = str_replace($markdown, "", $return);
-        }
-
-        return $return;
-    }
-
-    private function itemLink(string $item): string
-    {
-        $item = explode("{", $item ?? '');
-        $item = explode("}", $item[1] ?? '');
-
-        return $item[0];
-    }
-
-    public function setCurrentPage(int $page)
+    public function setCurrentPage(int $page): void
     {
         $this->currentPage = $page;
     }
 
-    public function setCurrentIndex(string $index)
-    {
-        $this->currentIndex = $index;
-    }
 
-    public function setCurrentEntry(string $entry)
+    public function setCurrentEntry(string $entry): void
     {
         $this->currentEntry = $entry;
     }
 
-    public function getContent()
+
+    public function haveEntries(): bool
     {
-        return $this->content;
+        return count($this->getData()) > 0;
     }
 
-    public function haveEntries()
-    {
-        if ($this->countItems() > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
-    public function displayPage($page = 1, $maxItems = null)
-    {
-        $items = array();
-        $data = $this->getData();
-        $return = '';
-        $i = 0;
-        if ($maxItems == null) {
-            $maxItems = $this->maxItems;
-        }
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                $items[] = $item;
-            }
-        }
-
-        $items = new LimitIterator(new ArrayIterator($items), ($page * $maxItems) - $maxItems, $maxItems * $page);
-
-        foreach ($items as $item) {
-            $return .= '<p>' . substr($this->replace($item, true), 0, 100) . '...</p>';
-            $return .= '<p><a href="http://' . BASE_URL . '/app/infernal/entry/' . $this->sanitize($this->itemLink($item)) . '">Lire la suite</a></p>';
-        }
-
-        return $return;
-    }
-
-    public function getEntry()
-    {
-        $data = $this->getData();
-        $return = '';
-
-        if ($this->currentEntry) {
-
-            foreach ($data as $item) {
-
-                if ($item['slug'] === $this->currentEntry) {
-
-                    $return .= '<p>';
-                    $return .= $this->markdown->parse($item['content']);
-                    $return .= '</p>';
-
-                    break;
-                }
-            }
-        }
-
-        return $return;
-    }
-
-    public function getEntries($maxItems = null)
+    /**
+     * Display list of entries.
+     */
+    public function getEntries(): array
     {
         $entries = $this->getData();
 
-        if ($maxItems == null) {
-            $maxItems = $this->maxItems;
-        }
+        $offset = ($this->currentPage - 1) * $this->maxItems;
+
+        return array_slice(
+            $entries,
+            $offset,
+            $this->maxItems
+        );
+    }
+
+
+    public function renderEntries($maxItems = null): string
+    {
+        $entries = $this->getData();
+
+        $maxItems ??= $this->maxItems;
+
 
         $offset = ($this->currentPage - 1) * $maxItems;
+
 
         $entries = array_slice(
             $entries,
@@ -226,218 +188,113 @@ class Vault
             $maxItems
         );
 
+
         $return = '';
+
 
         foreach ($entries as $entry) {
 
-            $return .= '<p>';
-            $return .= substr(
-                $this->replace($entry['content'], true),
+            $content = $this->markdown->parse(
+                $entry->getContent()
+            );
+
+
+            $excerpt = substr(
+                strip_tags($content),
                 0,
                 100
             );
-            $return .= '...</p>';
+
+
+            $return .= '<article>';
 
             $return .= '<p>';
-            $return .= '<a href="' . BASE_URL . '/entry/' . $entry['slug'] . '">';
+            $return .= $excerpt . '...';
+            $return .= '</p>';
+
+            $return .= '<p>';
+            $return .= '<a href="'
+                . BASE_URL
+                . '/entry/'
+                . $entry->getSlug()
+                . '">';
             $return .= 'Lire la suite';
             $return .= '</a>';
             $return .= '</p>';
+
+            $return .= '</article>';
         }
+
 
         return $return;
     }
 
-    public function pagination($maxItems = null)
+
+
+    /**
+     * Display one entry.
+     */
+    public function getEntry(): string
     {
-        if ($maxItems == null) {
-            $maxItems = $this->maxItems;
+        if (!$this->currentEntry) {
+            return '';
         }
 
-        $items = $this->countItems();
-        if (($items % $maxItems) == 0) {
-            $pages = $items / $maxItems;
-        } else {
-            $pages = $items % $maxItems;
-        }
-        $return = '<ul>';
-        for ($i = 0; $i < $pages; $i++) {
-            $return .= '<li><a href="' . BASE_URL . '/page/' . ($i + 1) . '">' . ($i + 1) . '</a></li>';
-        }
-        $return .= '</ul>';
 
-        return $return;
+        foreach ($this->getData() as $entry) {
+
+            if ($entry->getSlug() === $this->currentEntry) {
+
+                return $this->markdown->parse(
+                    $entry->getContent()
+                );
+            }
+        }
+
+
+        return '';
     }
 
-    public function menu()
+
+
+    /**
+     * Pagination.
+     */
+    public function pagination($maxItems = null): string
     {
-        $items = $this->getIndexes();
+        $maxItems ??= $this->maxItems;
+
+
+        $count = count($this->getData());
+
+        $pages = ceil($count / $maxItems);
+
+
+        if ($pages <= 1) {
+            return '';
+        }
+
 
         $return = '<ul>';
 
-        foreach ($items as $item) {
+
+        for ($i = 1; $i <= $pages; $i++) {
 
             $return .= '<li>';
-            $return .= '<a href="' . BASE_URL . '/contents/' . $item . '">';
-            $return .= $item;
+            $return .= '<a href="'
+                . BASE_URL
+                . '/page/'
+                . $i
+                . '">';
+            $return .= $i;
             $return .= '</a>';
             $return .= '</li>';
         }
 
+
         $return .= '</ul>';
 
+
         return $return;
-    }
-
-    public function get_preventry(string $entry)
-    {
-        $items = array();
-        $data = $this->getData();
-        $return = '';
-        $i = 0;
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                $items[$i] = $this->sanitize($this->itemLink($item));
-                $i++;
-            }
-        }
-        $key = array_search($entry, $items);
-        if ($key > 0) {
-            $return .= '<p><a href="' . $items[$key - 1] . '">précédent</a></p>';
-        } else {
-            $return .= '<p></p>';
-        }
-        return $return;
-    }
-
-    public function get_nextentry(string $entry)
-    {
-        $items = array();
-        $data = $this->getData();
-        $return = '';
-        $i = 0;
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                $items[$i] = $this->sanitize($this->itemLink($item));
-                $i++;
-            }
-        }
-        $maxItems = count($items);
-        $key = array_search($entry, $items);
-        if (($key + 1) < $maxItems) {
-            $return .= '<p><a href="' . $items[$key + 1] . '">suivant</a></p>';
-        } else {
-            $return .= '<p></p>';
-        }
-        return $return;
-    }
-
-    private function sanitize(string $texte): string
-    {
-        $texte = mb_strtolower($texte, 'UTF-8');
-        $texte = str_replace(
-            array(
-                'à',
-                'â',
-                'ä',
-                'á',
-                'ã',
-                'å',
-                'î',
-                'ï',
-                'ì',
-                'í',
-                'ô',
-                'ö',
-                'ò',
-                'ó',
-                'õ',
-                'ø',
-                'ù',
-                'û',
-                'ü',
-                'ú',
-                'é',
-                'è',
-                'ê',
-                'ë',
-                'ç',
-                'ÿ',
-                'ñ',
-            ),
-            array(
-                'a',
-                'a',
-                'a',
-                'a',
-                'a',
-                'a',
-                'i',
-                'i',
-                'i',
-                'i',
-                'o',
-                'o',
-                'o',
-                'o',
-                'o',
-                'o',
-                'u',
-                'u',
-                'u',
-                'u',
-                'e',
-                'e',
-                'e',
-                'e',
-                'c',
-                'y',
-                'n',
-            ),
-            $texte
-        );
-
-        return $texte;
-    }
-
-    public function getEntryTitle()
-    {
-        $items = array();
-        $data = $this->getData();
-        $i = 0;
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                $items[$i] = $this->itemLink($item) . '#' . $this->sanitize($this->itemLink($item));
-                $i++;
-            }
-        }
-        return $items;
-    }
-
-    public function randomEntry()
-    {
-        $items = array();
-        $data = $this->getData();
-        $i = 0;
-
-        foreach ($data as $parts) {
-            foreach ($parts as $item) {
-                if (isset($_SESSION['count']) && ($_SESSION['count'] != "")) {
-                    if ($_SESSION['count'] != $this->sanitize($this->itemLink($item))) {
-                        $items[$i] = $this->sanitize($this->itemLink($item));
-                    }
-                } else {
-                    $items[$i] = $this->sanitize($this->itemLink($item));
-                }
-                $i++;
-            }
-        }
-
-        $item = $items[rand(0, count($items) - 1)];
-        $_SESSION['random'] = $item;
-        return '<a href="entry/' . $item . '">random</a>';
     }
 }

@@ -1,26 +1,27 @@
-<div class="row">    
-    <div class="small-12">
-        <div class="row column text-center">
-            <h1><?php echo $this->getParam('site_title'); ?></h1>
-            <h2 class="subheader"><?php echo $this->getParam('site_subtitle'); ?></h2>
-        </div>
-    </div>    
-</div>
+<main class="content">
+    <section class="entries">
+        <h2>Last entries</h2>
+        <?php
 
-<div class="row medium-8 large-7 columns">
-    <?php
-    if ($articles->haveEntries()){
-        echo $articles->getEntries();
-    }else{
-        echo "No entries for the moment!";
-    }
-    ?>
-</div>
+        if (count($articles->getEntries()) > 0) {
 
-<div class="row medium-12 large-2 columns">
-    <ul class="menu simple">
-        <li><a href="#"><?php echo $articles->pagination(); ?></a></li>
-    </ul>
-</div>
+            foreach ($articles->getEntries() as $entry) {
 
+                echo '<article>';
 
+                echo '<h2>' . $entry->getTitle() . '</h2>';
+                echo '<p>Posté le ' . $entry->getFormattedDate() . ' dans ' . implode(', ', $entry->getCategories()) . '</p>';
+                echo '<p>' . $entry->getContent() . '</p>';
+
+                echo '</article>';
+            }
+        } else {
+
+            echo "No entries for the moment!";
+        }
+        ?>
+    </section>
+    <nav class="pagination">
+        <?php echo $articles->pagination(); ?>
+    </nav>
+</main>

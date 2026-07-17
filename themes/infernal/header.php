@@ -5,17 +5,17 @@
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
+    <link rel="stylesheet" href="<?= $inferno->getThemeUrl() ?>/style.css">
+    <title><?php echo $this->getParam('site_title'); ?></title>
 </head>
 
 <body>
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <ul class="menu">
+    <header>
+        <h1 class="site-title"><?php echo $this->getParam('site_title'); ?></h1>
+        <p class="site-tagline"><?php echo $this->getParam('site_subtitle'); ?></p>
+        <nav>
+            <ul>
                 <li><a href="<?= $inferno->getParam('base_url') ?>/">Accueil</a></li>
             </ul>
-        </div>
-        <div class="top-bar-right">
-
-        </div>
-    </div>
+        </nav>
+    </header>

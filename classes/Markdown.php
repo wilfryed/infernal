@@ -24,6 +24,8 @@ class Markdown
 
         $content = preg_replace('/^> (.+)$/m', '<blockquote>$1</blockquote>', $content);
 
+        $content = preg_replace('/!\[(.*?)\]\((.*?)\)/', '<img src="$2" alt="$1">', $content);
+
         $content = $this->parseParagraphs($content);
 
         return $content;
