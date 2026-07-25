@@ -5,40 +5,18 @@ class Gatekeeper
 
     public function getRoute()
     {
-
-        if (isset($_GET['entry'])) {
-
+        if (!isset($_GET['route']) || empty($_GET['route'])) {
+            
             return [
-                'name' => 'entry',
-                'value' => $_GET['entry']
+                'name' => 'homepage',
+                'path' => []
             ];
 
         }
-
-
-        if (isset($_GET['page'])) {
-
-            return [
-                'name' => 'page',
-                'value' => (int) $_GET['page']
-            ];
-
-        }
-
-
-        if (isset($_GET['index'])) {
-
-            return [
-                'name' => 'index',
-                'value' => $_GET['index']
-            ];
-
-        }
-
 
         return [
-            'name' => 'homepage',
-            'value' => null
+            'name' => 'path',
+            'path' => explode('/', trim($_GET['route'], '/'))
         ];
     }
 }

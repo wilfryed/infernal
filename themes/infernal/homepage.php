@@ -1,27 +1,21 @@
-<main class="content">
-    <section class="entries">
-        <h2>Last entries</h2>
-        <?php
-
-        if (count($articles->getEntries()) > 0) {
-
-            foreach ($articles->getEntries() as $entry) {
-
-                echo '<article>';
-
-                echo '<h2>' . $entry->getTitle() . '</h2>';
-                echo '<p>Posté le ' . $entry->getFormattedDate() . ' dans ' . implode(', ', $entry->getCategories()) . '</p>';
-                echo '<p>' . $entry->getContent() . '</p>';
-
-                echo '</article>';
-            }
-        } else {
-
-            echo "No entries for the moment!";
-        }
-        ?>
+<?php $this->getTemplatePart('header'); ?>
+<div class="row">
+    <?php $this->getTemplatePart('sidebar'); ?>
+    <section class="col-9">
+        <article>
+            <?= $page->getContent() ?>
+        </article>
+        <div class="row">
+            <?php
+            foreach ($this->query('blog')->orderBy('date', 'desc')->limit(3)->get() as $entry): ?>
+            
+                <article class="col-4">
+                    <a href="blog/<?= $entry->getUrl() ?>">
+                        <img src="<?= $entry->getThumbnail() ?>">
+                        <h3><?= $entry->getTitle() ?></h3>
+                    </a>
+                </article>
+            <?php endforeach; ?>
+        </div>
     </section>
-    <nav class="pagination">
-        <?php echo $articles->pagination(); ?>
-    </nav>
-</main>
+</div>

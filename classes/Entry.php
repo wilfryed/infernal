@@ -4,6 +4,7 @@ class Entry
 {
     private $title;
     private $slug;
+    private $url;
     private $date;
     private $author;
     private $categories;
@@ -23,11 +24,17 @@ class Entry
         $this->tags = $data['tags'] ?? [];
         $this->thumbnail = $data['thumbnail'] ?? '';
         $this->content = $data['content'] ?? '';
+        $this->url = $data['slug'] ?? '';
     }
 
     public function getTitle()
     {
         return $this->title;
+    }
+
+    public function getUrl()
+    {
+        return $this->url;
     }
 
     public function getSlug()
@@ -70,5 +77,17 @@ class Entry
         $date = new DateTime($this->date);
 
         return $date->format('d/m/Y');
+    }
+
+    public function get(string $field)
+    {
+        return match ($field) {
+            'title'      => $this->title,
+            'slug'       => $this->slug,
+            'date'       => $this->date,
+            'author'     => $this->author,
+            'thumbnail'  => $this->thumbnail,
+            default      => null,
+        };
     }
 }

@@ -14,19 +14,61 @@ class Vault
     private Markdown $markdown;
 
 
-    public function __construct(Markdown $markdown, $path = true, $maxItems = 10)
+    public function __construct(Markdown $markdown, string $path = '')
     {
         $this->markdown = $markdown;
 
-        $this->path = $path === true
-            ? "contents"
-            : "contents/" . $path;
+        $this->path = "contents";
 
-        $this->maxItems = $maxItems;
+        if ($path !== '') {
+            $this->path .= "/" . trim($path, "/");
+        }
+
+        $this->maxItems = 24;
         $this->currentPage = 1;
         $this->currentEntry = false;
     }
 
+    public function resolve(string $path): array
+    {
+        $directory = "contents/" . $path;
+        $file = "contents/" . $path . ".md";
+
+
+        if (is_dir($directory)) {
+            $configFile = $directory . '/_config.md';
+
+            return [
+                'type' => 'archive',
+                'path' => $path,
+                'config' => is_file($configFile)
+                    ? $configFile
+                    : null
+            ];
+        }
+
+        if (is_file($file)) {
+
+            // Est-ce un fichier à la racine ?
+            if (substr_count($path, '/') === 0) {
+
+                return [
+                    'type' => 'page',
+                    'file' => $file
+                ];
+            }
+
+            return [
+                'type' => 'single',
+                'file' => $file
+            ];
+        }
+
+
+        return [
+            'type' => '404'
+        ];
+    }
 
     /**
      * Return all entries.
@@ -43,6 +85,15 @@ class Vault
         return $entries;
     }
 
+    public function load(string $filename): Entry
+    {
+        return $this->createEntry($filename);
+    }
+
+    public function loadConfig(string $filename): array
+    {
+        return $this->getCollectionConfig($filename);
+    }
 
     /**
      * Create an Entry object from a file.
@@ -50,12 +101,19 @@ class Vault
     private function createEntry(string $filename): Entry
     {
         $content = file_get_contents($filename);
-
         $data = $this->parseMarkdownFile($content);
 
         $data['file'] = $filename;
 
         return new Entry($data, $this->markdown);
+    }
+
+    private function getCollectionConfig(string $filename): array
+    {
+        $content = file_get_contents('contents/' . $filename . '/_config.md');
+        $data = $this->parseConfigFile($content);
+
+        return $data;
     }
 
     private function parseMarkdownFile(string $content): array
@@ -125,6 +183,65 @@ class Vault
         return $data;
     }
 
+    private function parseConfigFile(string $content): array
+    {
+        $data = [
+            'type' => '',
+            'template' => ''
+        ];
+
+        if (!preg_match('/^---(.*?)---(.*)$/s', $content, $matches)) {
+            $data['content'] = $content;
+            return $data;
+        }
+
+        $metadata = trim($matches[1]);
+
+        foreach (explode("\n", $metadata) as $line) {
+
+            if (!str_contains($line, ':')) {
+                continue;
+            }
+
+
+            [$key, $value] = explode(':', $line, 2);
+
+            $key = trim($key);
+            $value = trim($value);
+
+
+            // Tableau simple : ["a", "b"]
+            if (
+                str_starts_with($value, '[') &&
+                str_ends_with($value, ']')
+            ) {
+
+                $value = trim($value, '[]');
+
+                if ($value === '') {
+                    $value = [];
+                } else {
+
+                    $value = array_map(
+                        function ($item) {
+                            return trim($item, " \"'");
+                        },
+                        explode(',', $value)
+                    );
+                }
+            } else {
+                // Valeur texte
+                $value = trim($value, "\"'");
+            }
+
+
+            $data[$key] = $value;
+        }
+
+
+        return $data;
+    }
+
     /**
      * Find markdown and text files.
      */
@@ -158,17 +275,23 @@ class Vault
     /**
      * Display list of entries.
      */
-    public function getEntries(): array
+    public function getEntries(?int $limit = null): array
     {
         $entries = $this->getData();
-
         $offset = ($this->currentPage - 1) * $this->maxItems;
+
+        $limit ??= $this->maxItems;
 
         return array_slice(
             $entries,
             $offset,
-            $this->maxItems
+            $limit
         );
+    }
+
+    public function getAllEntries(): array
+    {
+        return $this->getData();
     }
 
 
@@ -254,8 +377,6 @@ class Vault
 
         return '';
     }
-
-
 
     /**
      * Pagination.

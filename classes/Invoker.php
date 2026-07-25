@@ -9,63 +9,23 @@ class Invoker
     public function __construct($inferno)
     {
         $this->inferno = $inferno;
+
+        $inferno->loadTheme();
     }
 
-    public function castRendering(array $route)
+    public function castRendering(array $page)
     {
-        $this->getHeader();
-        $this->getMain($route);
-        $this->getFooter();
+        $template = $page['template'];
+        $data = $page['data'];
+        $this->inferno->loadTemplate($template, $data);
     }
 
-    public function getFooter()
+    public function render(array $page)
     {
-        echo $this->inferno->loadTemplate('footer');
-    }
+        $template = $page['template'];
 
-    public function getHeader()
-    {
-        echo $this->inferno->loadTemplate('header');
-    }
+        $data = $page['data'];
 
-    public function getMain(array $route)
-    {
-        $articles = $this->inferno->loadArticles($route);
-        switch ($route['name']) {
-            case 'entry':
-
-                $this->getTemplatePart('entry', $articles);
-
-                break;
-
-            case 'page':
-
-                $this->getTemplatePart('homepage', $articles);
-
-                break;
-
-            case 'index':
-
-                $this->getTemplatePart('homepage', $articles);
-
-                break;
-
-            default:
-
-                $this->getTemplatePart('homepage', $articles);
-
-                break;
-        }
-    }
-
-    public function getTemplatePart($part, $articles)
-    {
-        echo $this->inferno->loadTemplate($part, ['articles' => $articles]);
-    }
-
-
-    public function getParam(string $param)
-    {
-        return $this->inferno->get($param);
+        include "themes/" . $theme . "/" . $template . ".php";
     }
 }

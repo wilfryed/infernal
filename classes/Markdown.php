@@ -3,37 +3,76 @@
 class Markdown
 {
 
-    public function parse($content)
+    public function parse(string $content): string
     {
-        $content = htmlspecialchars($content);
-
+        // Titres
         $content = preg_replace('/^### (.+)$/m', '<h3>$1</h3>', $content);
         $content = preg_replace('/^## (.+)$/m', '<h2>$1</h2>', $content);
         $content = preg_replace('/^# (.+)$/m', '<h1>$1</h1>', $content);
 
+        // Gras / italique
         $content = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $content);
         $content = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $content);
 
-        $content = preg_replace('/!\[(.*?)\]\((.*?)\)/', '<img src="$2" alt="$1">', $content);
+        // Images
+        $content = preg_replace(
+            '/!\[(.*?)\]\((.*?)\)/',
+            '<img src="$2" alt="$1">',
+            $content
+        );
 
-        $content = preg_replace('/\[(.*?)\]\((.*?)\)/', '<a href="$2">$1</a>', $content);
+        // Liens Markdown
+        $content = preg_replace(
+            '/\[(.*?)\]\((.*?)\)/',
+            '<a href="$2">$1</a>',
+            $content
+        );
 
-        $content = preg_replace('/`(.+?)`/', '<code>$1</code>', $content);
+        // Liens Infernal
+        $content = preg_replace(
+            '/\[(.*?)\]\{(.*?)\}/',
+            '<a href="$2">$1</a>',
+            $content
+        );
 
-        $content = preg_replace('/^---$/m', '<hr>', $content);
+        // Code inline
+        $content = preg_replace(
+            '/`(.+?)`/',
+            '<code>$1</code>',
+            $content
+        );
 
-        $content = preg_replace('/^> (.+)$/m', '<blockquote>$1</blockquote>', $content);
+        // Citation
+        $content = preg_replace(
+            '/^> (.+)$/m',
+            '<blockquote>$1</blockquote>',
+            $content
+        );
 
-        $content = preg_replace('/!\[(.*?)\]\((.*?)\)/', '<img src="$2" alt="$1">', $content);
+        // Séparateur
+        $content = preg_replace(
+            '/^---$/m',
+            '<hr>',
+            $content
+        );
 
-        $content = $this->parseParagraphs($content);
-
-        return $content;
+        return $this->parseParagraphs($content);
     }
 
-    private function parseParagraphs($content)
+    private function flushParagraph(array $paragraph): string
     {
-        $lines = explode("\n", $content);
+        if (empty($paragraph)) {
+            return '<br>';
+        }
+
+        return '<p>'
+            . implode("<br>\n", $paragraph)
+            . '</p>';
+    }
+
+    private function parseParagraphs(string $content): string
+    {
+        $lines = preg_split("/\R/u", $content);
 
         $html = '';
         $paragraph = [];
@@ -42,23 +81,69 @@ class Markdown
 
             $line = trim($line);
 
+
+            // Ligne vide = fin du paragraphe
             if ($line === '') {
 
-                if (!empty($paragraph)) {
-                    $html .= '<p>' . implode(' ', $paragraph) . '</p>';
-                    $paragraph = [];
-                }
+                $html .= $this->flushParagraph($paragraph);
+
+                $paragraph = [];
 
                 continue;
             }
 
+
+            // Bloc HTML brut
+            if (
+                $this->isHtmlBlock($line) ||
+                $this->isBlockElement($line)
+            ) {
+
+                if (!empty($paragraph)) {
+
+                    $html .= '<p>'
+                        . implode("<br>\n", $paragraph)
+                        . '</p>';
+
+                    $paragraph = [];
+                }
+
+                $html .= $line;
+
+                continue;
+            }
+
+
             $paragraph[] = $line;
         }
 
+
         if (!empty($paragraph)) {
-            $html .= '<p>' . implode(' ', $paragraph) . '</p>';
+
+            $html .= '<p>'
+                . implode("<br>\n", $paragraph)
+                . '</p>';
         }
 
+
         return $html;
+    }
+
+
+    private function isHtmlBlock(string $line): bool
+    {
+        return preg_match(
+            '/^<(iframe|div|section|figure|table|video|script|style)/i',
+            trim($line)
+        ) === 1;
+    }
+
+
+    private function isBlockElement(string $line): bool
+    {
+        return preg_match(
+            '/^<(h1|h2|h3|blockquote|hr|img)/i',
+            $line
+        ) === 1;
     }
 }

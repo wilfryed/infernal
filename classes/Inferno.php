@@ -14,21 +14,125 @@ class Inferno
     private $_theme;
     private $param;
     private $markdown;
+    private $query;
+    private $vault;
+    private string $themePath;
 
-    public function __construct($codex, $markdown)
+    public function __construct(Codex $codex, Markdown $markdown)
     {
         $this->codex = $codex;
         $this->markdown = $markdown;
-        $this->_content = '';
-        $this->_js = '';
+        $this->vault = new Vault($markdown);
     }
 
-    public function loadCss() {}
-
-    public function loadJs($script)
+    public function query(string $path): Query
     {
-        $return = '<script src="' . $script . '"></script>' . PHP_EOL;
-        $this->_js .= $return;
+        $vault = new Vault(
+            $this->markdown,
+            $path
+        );
+
+        return new Query($vault);
+    }
+
+    public function dispatch(array $route): array
+    {
+        $path = implode('/', $route['path']);
+
+        $resource = $this->vault->resolve($path);
+        if ($route['name'] === 'homepage') {
+            if ($_SERVER['REQUEST_URI'][-1] !== '/') {
+                header("Location: " . $_SERVER['REQUEST_URI'] . "/", true, 301);
+                exit;
+            }
+
+            $vault = new Vault($this->markdown, $resource['path']);
+            $page = $this->vault->load('contents/homepage.md');
+
+            return [
+                'template' => 'homepage',
+                'data' => [
+                    'title' => $resource['path'],
+                    'entries' => $vault->getEntries(),
+                    'page' => $page
+                ]
+            ];
+        }
+
+        if ($route['name'] !== 'path') {
+
+            return [
+                'template' => '404',
+                'data' => []
+            ];
+        }
+
+        switch ($resource['type']) {
+            case 'archive':
+
+                if ($_SERVER['REQUEST_URI'][-1] !== '/') {
+                    header("Location: " . $_SERVER['REQUEST_URI'] . "/", true, 301);
+                    exit;
+                }
+
+                $vault = new Vault($this->markdown, $resource['path']);
+                $config = $vault->loadConfig($resource['path']);
+
+                if ($config['type'] === 'page') {
+                    $page = $this->vault->load('contents/widmo/' . $resource['path'] . '.md');
+
+                    return [
+                        'template' => $config['template'],
+                        'data' => [
+                            'title' => $resource['path'],
+                            'page' => $page,
+                            'path' => $resource['path']
+                        ]
+                    ];
+                } else {
+
+                    return [
+                        'template' => 'archive',
+                        'data' => [
+                            'title' => $resource['path'],
+                            'entries' => $vault->getEntries(),
+                            'path' => $resource['path']
+                        ]
+                    ];
+                }
+
+            case 'single':
+
+                $entry = $this->vault->load($resource['file']);
+
+                return [
+                    'template' => 'single',
+                    'data' => [
+                        'entry' => $entry
+                    ]
+                ];
+
+            case 'page':
+
+                $page = $this->vault->load(
+                    $resource['file']
+                );
+
+
+                return [
+                    'template' => 'page',
+                    'data' => [
+                        'page' => $page
+                    ]
+                ];
+
+            default:
+
+                return [
+                    'template' => '404',
+                    'data' => []
+                ];
+        }
     }
 
     public function getParam(string $param)
@@ -40,74 +144,28 @@ class Inferno
     {
         if ($this->getParam("theme")) {
             $this->_theme = $this->getParam("theme");
+            $this->themePath = "themes/" . $this->_theme;
             return true;
         } else {
             return false;
         }
     }
 
-    public function purgatory($case = '')
-    {
-        $return = file_get_contents('purgatory.html', FILE_USE_INCLUDE_PATH);
-
-        switch ($case) {
-            case "404":
-                $return = str_replace("%%%TITLE%%%", "Vous cherchez quoi au juste ?", $return);
-                $return = str_replace("%%%CONTENT%%%", "Vous cherchez quoi au juste ?", $return);
-                break;
-            default:
-                $return = str_replace("%%%TITLE%%%", "Rien à voir pour le moment !", $return);
-                $return = str_replace("%%%CONTENT%%%", "Rien à voir pour le moment !", $return);
-        }
-
-
-        echo $return;
-    }
-
-    public function loadArticles(array $route)
-    {
-        switch ($route['name']) {
-            case 'entry':
-
-                $articles = new Vault($this->markdown);
-
-                $articles->setCurrentEntry($route['value']);
-
-                return $articles;
-                break;
-
-            case 'page':
-
-                $articles = new Vault($this->markdown, true, 4);
-
-                $articles->setCurrentPage($route['value']);
-                return $articles;
-                break;
-
-            case 'index':
-
-                $articles = new Vault($this->markdown, true, 25);
-
-                $articles->setCurrentPage(1);
-                $articles->setCurrentIndex($route['value']);
-                return $articles;
-                break;
-
-            default:
-
-                $articles = new Vault($this->markdown, true, 25);
-                return $articles;
-                break;
-        }
-    }
-
-    public function loadTemplate($template, $vars = [])
+    public function loadTemplate($template, $data = [])
     {
         $inferno = $this;
-        extract($vars);
-        ob_start();
+        extract($data);
         include 'themes/' . $this->_theme . '/' . $template . '.php';
-        return ob_get_clean();
+    }
+
+    public function getTemplatePart(string $part): void
+    {
+        $file = $this->themePath . "/" . $part . ".php";
+
+        if (!file_exists($file)) {
+            return;
+        }
+        include $file;
     }
 
     public function getThemeUrl(): string
