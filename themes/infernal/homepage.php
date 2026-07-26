@@ -7,7 +7,7 @@
         </article>
         <div class="row">
             <?php
-            foreach ($this->query('blog')->orderBy('date', 'desc')->limit(3)->get() as $entry): ?>
+            foreach ($this->query('blog')->latest(1)->get() as $entry): ?>
             
                 <article class="col-4">
                     <a href="blog/<?= $entry->getUrl() ?>">

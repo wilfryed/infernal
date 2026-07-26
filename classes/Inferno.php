@@ -25,14 +25,12 @@ class Inferno
         $this->vault = new Vault($markdown);
     }
 
-    public function query(string $path): Query
+    public function query(string ...$paths): Query
     {
-        $vault = new Vault(
+        return new Query(
             $this->markdown,
-            $path
+            $paths
         );
-
-        return new Query($vault);
     }
 
     public function dispatch(array $route): array
@@ -103,13 +101,19 @@ class Inferno
 
             case 'single':
 
-                $entry = $this->vault->load($resource['file']);
+                $vault = new Vault(
+                    $this->markdown,
+                    $resource['path']
+                );
+
+                $entry = $vault->load($resource['file']);
 
                 return [
                     'template' => 'single',
                     'data' => [
                         'entry' => $entry
-                    ]
+                    ],
+                    'path' => $resource['path']
                 ];
 
             case 'page':

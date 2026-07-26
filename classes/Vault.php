@@ -8,6 +8,7 @@
 class Vault
 {
     private string $path;
+    private string $urlPath;
     private int $maxItems;
     private int $currentPage;
     private string|false $currentEntry;
@@ -19,6 +20,8 @@ class Vault
         $this->markdown = $markdown;
 
         $this->path = "contents";
+
+        $this->urlPath = str_replace('contents/', '', $path);
 
         if ($path !== '') {
             $this->path .= "/" . trim($path, "/");
@@ -54,13 +57,15 @@ class Vault
 
                 return [
                     'type' => 'page',
-                    'file' => $file
+                    'file' => $file,
+                    'path' => ''
                 ];
             }
 
             return [
                 'type' => 'single',
-                'file' => $file
+                'file' => $file,
+                'path' => dirname($path)
             ];
         }
 
@@ -105,7 +110,7 @@ class Vault
 
         $data['file'] = $filename;
 
-        return new Entry($data, $this->markdown);
+        return new Entry($data, $this->markdown, $this->urlPath);
     }
 
     private function getCollectionConfig(string $filename): array

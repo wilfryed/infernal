@@ -1,9 +1,15 @@
 <?php
 
+/**
+ * Represent a content entry in Infernal.
+ *
+ * An entry can be a page or a post being part of a collection.
+ */
 class Entry
 {
     private $title;
     private $slug;
+    private string $path;
     private $url;
     private $date;
     private $author;
@@ -13,9 +19,17 @@ class Entry
     private $content;
     private Markdown $markdown;
 
-    public function __construct(array $data, Markdown $markdown)
+    /**
+     * Create an entry from data extracted of the Markdown's frontmatter.
+     *
+     * @param array $data Metadata and content of the file's Markdown
+     * @param Markdown $markdown Parser Markdown used for the HTML render
+     * @param string $path Entry's collection, if relevant
+     */
+    public function __construct(array $data, Markdown $markdown, string $path = '')
     {
         $this->markdown = $markdown;
+
         $this->title = $data['title'] ?? '';
         $this->slug = $data['slug'] ?? '';
         $this->date = $data['date'] ?? '';
@@ -24,7 +38,24 @@ class Entry
         $this->tags = $data['tags'] ?? [];
         $this->thumbnail = $data['thumbnail'] ?? '';
         $this->content = $data['content'] ?? '';
-        $this->url = $data['slug'] ?? '';
+
+        $this->path = $path;
+        $this->url = BASE_URL . '/' . $path . '/' . $this->slug;
+    }
+
+    public function belongsToCollection(): bool
+    {
+        return !empty($this->path);
+    }
+
+    public function getId(): string
+    {
+        return $this->path . ':' . $this->slug;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
     }
 
     public function getTitle()

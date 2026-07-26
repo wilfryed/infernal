@@ -2,14 +2,29 @@
 
 class Query
 {
-    private Vault $vault;
+    private array $paths;
+    private Markdown $markdown;
     private ?int $limit = null;
     private string $orderBy = 'date';
     private string $direction = 'desc';
 
-    public function __construct(Vault $vault)
+    public function __construct(Markdown $markdown, array $paths)
     {
-        $this->vault = $vault;
+        $this->markdown = $markdown;
+        $this->paths = $paths;
+    }
+    /**
+     * 
+     * Alias to return the latest published items of a collection.
+     *
+     * @param int $limit Number of items to return.
+     * @return self
+     */
+    public function latest(int $limit = 10): self
+    {
+        return $this
+            ->orderBy('date', 'desc')
+            ->limit($limit);
     }
 
     public function limit(int $limit): self
@@ -17,6 +32,11 @@ class Query
         $this->limit = $limit;
 
         return $this;
+    }
+
+    public function first(): ?Entry
+    {
+        return $this->get()[0] ?? null;
     }
 
     public function get(): array
@@ -41,7 +61,7 @@ class Query
 
         foreach ($entries as $i => $entry) {
 
-            if ($entry->getSlug() === $current->getSlug()) {
+            if ($entry->getId() === $current->getId()) {
 
                 return $entries[$i - 1] ?? null;
             }
@@ -56,7 +76,7 @@ class Query
 
         foreach ($entries as $i => $entry) {
 
-            if ($entry->getSlug() === $current->getSlug()) {
+            if ($entry->getId() === $current->getId()) {
 
                 return $entries[$i + 1] ?? null;
             }
@@ -75,19 +95,25 @@ class Query
 
     private function getSortedEntries(): array
     {
-        $entries = $this->vault->getAllEntries();
+        $entries = [];
+
+        foreach ($this->paths as $path) {
+
+            $vault = new Vault(
+                $this->markdown,
+                $path
+            );
+
+            $entries = array_merge(
+                $entries,
+                $vault->getAllEntries()
+            );
+        }
 
         usort($entries, function ($a, $b) {
 
-            $getter = 'get' . ucfirst($this->orderBy);
-
-            $valueA = method_exists($a, $getter)
-                ? $a->$getter()
-                : '';
-
-            $valueB = method_exists($b, $getter)
-                ? $b->$getter()
-                : '';
+            $valueA = $a->get($this->orderBy);
+            $valueB = $b->get($this->orderBy);
 
             $compare = $valueA <=> $valueB;
 
